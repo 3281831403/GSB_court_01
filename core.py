@@ -4,7 +4,15 @@ import json
 
 
 def new_game():
-    return {"cases": {}, "room_load": 0, "room_capacity": 2, "fee_paid": 100, "day": 1, "case_id": 0}
+    return {
+        "cases": {},
+        "room_load": 0,
+        "room_capacity": 2,
+        "fee_paid": 100,
+        "day": 1,
+        "case_id": 0,
+        "judges": {"J1": True, "J2": False},
+    }
 
 
 def save_state(state):
@@ -12,44 +20,47 @@ def save_state(state):
 
 
 def load_state(text):
-    state = json.loads(text)
-    state["case_id"] += 1
-    return state
+    return json.loads(text)
 
 
 def file_case(state, case_id):
+    if case_id in state["cases"]:
+        return False
     state["cases"][case_id] = {"score": 0}
     return True
 
 
 def schedule(state, case_id):
+    if state["room_load"] >= state["room_capacity"]:
+        return False
     state["room_load"] += 1
     return True
 
 
 def fee(state, case_id, end_day):
-    return (end_day - state["day"]) - 1
+    return end_day - state["day"]
 
 
 def cancel(state, case_id):
+    state["fee_paid"] += 20
     return True
 
 
 def assign(state, case_id, judge):
+    if not state.get("judges", {}).get(judge, False):
+        return False
     state["cases"][case_id]["judge"] = judge
     return True
 
 
 def judge(state, case_id):
     if state["cases"][case_id].get("failed"):
-        state["fee_paid"] += 1
         return False
     state["fee_paid"] += 1
     return True
 
 
 def absence(state, case_id):
-    state["cases"][case_id]["score"] -= 1
     state["cases"][case_id]["score"] -= 1
     return True
 
